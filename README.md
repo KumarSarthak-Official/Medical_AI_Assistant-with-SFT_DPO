@@ -110,6 +110,8 @@ The project went through three major iterations. Each attempt revealed weaknesse
 <!-- Add screenshot: Screenshot__65_.png — run summary table showing eval/loss 1.62653 -->
 <!-- ![Attempt 1 Run Summary](assets/attempt1_run_summary.png) -->
 
+screenshots/Attempt1.png
+
 **Why This Wasn't Enough:**
 
 The pipeline ran successfully and training loss converged, but outputs were shallow. The `lavita/medical-qa-shared-task-v1-toy` dataset is deliberately tiny — designed for benchmarking, not training. Answers were often just single option labels with no clinical reasoning. The model learned format but not medical substance. With only **58 training steps**, the model had far too little exposure to medical content to generalize. The DPO stage (Beta=0.1) also gave the model too much freedom to deviate from the SFT reference.

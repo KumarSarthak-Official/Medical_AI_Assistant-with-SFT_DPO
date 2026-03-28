@@ -110,8 +110,6 @@ The project went through three major iterations. Each attempt revealed weaknesse
 <!-- Add screenshot: Screenshot__65_.png — run summary table showing eval/loss 1.62653 -->
 <!-- ![Attempt 1 Run Summary](assets/attempt1_run_summary.png) -->
 
-![SFT_Run_Report_1](Screenshots/Attempt_1/SFT_Run_Report.png)
-
 **Why This Wasn't Enough:**
 
 The pipeline ran successfully and training loss converged, but outputs were shallow. The `lavita/medical-qa-shared-task-v1-toy` dataset is deliberately tiny — designed for benchmarking, not training. Answers were often just single option labels with no clinical reasoning. The model learned format but not medical substance. With only **58 training steps**, the model had far too little exposure to medical content to generalize. The DPO stage (Beta=0.1) also gave the model too much freedom to deviate from the SFT reference.
@@ -159,8 +157,6 @@ The pipeline ran successfully and training loss converged, but outputs were shal
 
 <!-- Add screenshot: Screenshot__71_.png — ROUGE evaluation results 0.3641 / 0.1371 / 0.2813 -->
 <!-- ![Attempt 2 ROUGE Scores](assets/attempt2_rouge_scores.png) -->
-
-![Attempt_2](Screenshots/Attempt_2/Final_DPO_Completion.png)
 
 **Why This Still Wasn't Enough:**
 
@@ -240,8 +236,6 @@ Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better co
 <!-- Add screenshot: Screenshot__74_.png — Final SFT: 1521/1521 steps, 3 epochs, 97M trainable params -->
 <!-- ![Final SFT Training Complete](assets/final_sft_training.png) -->
 
-![Attempt_3](Screenshots/Attempt_3/ROUGE_Result.png)
-
 ### What the Numbers Mean
 
 The improvement from Attempt 2 → Final is dramatic. ROUGE-1 jumped from **0.36 → 0.77** — the final model correctly reproduces more than 3 out of 4 words present in a reference medical answer. ROUGE-2 at **0.70** shows strong bigram overlap, confirming the model captures real clinical terminology rather than isolated keywords. Perplexity dropped from **5.37 → 2.95**, indicating the model is far more confident and calibrated on medical text. All of this is attributable primarily to the dataset upgrade: USMLE board questions provide the clinical reasoning chains that teach a model *how to think* about medicine.
@@ -283,7 +277,13 @@ All training runs were tracked with [Weights & Biases](https://wandb.ai/kumarsar
 
 ## 🚀 Deployment Architecture
 
-The final model is served via a two-component production system:
+This project supports **two deployment modes** depending on your hardware and setup. Both expose the same Gradio chat interface.
+
+---
+
+### Mode 1 — FastAPI Backend (GPU Server / Cloud)
+
+Best for: production servers, cloud VMs, machines with a dedicated NVIDIA GPU.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -297,41 +297,109 @@ The final model is served via a two-component production system:
                        │ POST /chat  (Server-Sent Events)
 ┌──────────────────────▼──────────────────────────────────┐
 │           FastAPI Backend  (app.py)                      │
-│  Loads model in 4-bit, runs TextIteratorStreamer         │
+│  Loads model in 4-bit via Unsloth + TextIteratorStreamer │
 │  Model: kumarsarthak98/medical-llama-3.2-3b-sft-dpo     │
 └─────────────────────────────────────────────────────────┘
 ```
 
-The backend uses `TextIteratorStreamer` to stream tokens in real-time via Server-Sent Events (SSE), so the user sees responses appearing word-by-word without waiting for full generation.
+---
+
+### Mode 2 — LM Studio (Local / Offline / No GPU Required)
+
+Best for: local testing, recruiters evaluating the project, machines without a dedicated GPU. Runs **entirely offline** using the 4-bit GGUF export of the model — no Python backend, no CUDA, no API keys needed.
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     User (Browser)                      │
+└──────────────────────┬──────────────────────────────────┘
+                       │ HTTP
+┌──────────────────────▼──────────────────────────────────┐
+│              Gradio Frontend  (gradio_app.py)            │
+│     Streams OpenAI-compatible SSE from LM Studio        │
+└──────────────────────┬──────────────────────────────────┘
+                       │ POST /v1/chat/completions
+┌──────────────────────▼──────────────────────────────────┐
+│           LM Studio Local Server                         │
+│  Runs the GGUF model on CPU/GPU via llama.cpp            │
+│  Endpoint: http://127.0.0.1:1234                        │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 🛠️ Running Locally
 
-### Prerequisites
+Choose the mode that matches your setup:
+
+---
+
+### ⚡ Mode 1 — FastAPI (requires NVIDIA GPU)
+
+**Prerequisites:**
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 pip install unsloth transformers fastapi uvicorn gradio httpx pydantic
 ```
 
-Or install from `requirements.txt`:
+Or from `requirements.txt`:
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 1 — Start the FastAPI backend
+**Step 1 — Start the FastAPI backend:**
 ```bash
 python app.py
-# Server starts at http://localhost:8000
+# Loads model from HuggingFace, serves at http://localhost:8000
 ```
 
-### Step 2 — Launch the Gradio frontend (in a separate terminal)
+**Step 2 — Launch the Gradio frontend (new terminal):**
 ```bash
 python gradio_app.py
 # UI available at http://localhost:7860
 ```
 
-### Step 3 — Run ROUGE Evaluation
+---
+
+### 🖥️ Mode 2 — LM Studio (works on any machine, fully offline)
+
+> No GPU required. No Python backend. No API keys. Runs on Windows, Mac, and Linux.
+
+**Step 1 — Download LM Studio**
+
+Go to [lmstudio.ai](https://lmstudio.ai) and install it for your OS.
+
+**Step 2 — Download the GGUF model**
+
+Inside LM Studio, search for:
+```
+kumarsarthak98/medical-llama-3.2-3b-sft-dpo
+```
+Download the **4-bit GGUF** variant (Q4_K_M recommended for best speed/quality balance).
+
+**Step 3 — Start the Local Server**
+
+In LM Studio:
+- Go to the **"Local Server"** tab (the `↔` icon)
+- Select the downloaded model
+- Click **"Start Server"**
+- Server will run at `http://127.0.0.1:1234`
+
+**Step 4 — Install minimal Python dependencies:**
+```bash
+pip install gradio httpx
+```
+
+**Step 5 — Launch the Gradio frontend:**
+```bash
+python gradio_app.py
+# UI available at http://localhost:7860
+```
+
+That's it — open your browser at `http://localhost:7860` and start chatting with the model entirely offline.
+
+---
+
+### 📊 Run ROUGE Evaluation
 ```bash
 python evaluate.py \
   --model_id kumarsarthak98/medical-llama-3.2-3b-sft-dpo \

@@ -110,7 +110,7 @@ The project went through three major iterations. Each attempt revealed weaknesse
 <!-- Add screenshot: Screenshot__65_.png — run summary table showing eval/loss 1.62653 -->
 <!-- ![Attempt 1 Run Summary](assets/attempt1_run_summary.png) -->
 
-(screenshots/Attempt1.png)
+![SFT_Run_Report_1](screenshots/Attempt1.png)
 
 **Why This Wasn't Enough:**
 

@@ -160,6 +160,8 @@ The pipeline ran successfully and training loss converged, but outputs were shal
 <!-- Add screenshot: Screenshot__71_.png — ROUGE evaluation results 0.3641 / 0.1371 / 0.2813 -->
 <!-- ![Attempt 2 ROUGE Scores](assets/attempt2_rouge_scores.png) -->
 
+![Attempt_2](screenshots/Attempt_2/Final_DPO_Completion.png)
+
 **Why This Still Wasn't Enough:**
 
 Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better convergence (500 steps vs 110). But ROUGE-1 of **0.3641** means the model was only matching about 1 in 3 words from reference answers. The core problem was now clear: **the dataset itself was the bottleneck**. The toy dataset contains short, shallow answers that don't capture clinical reasoning. No amount of additional epochs could fix bad training data. PubMedQA alone, while research-heavy, doesn't provide the breadth of decision-making a medical assistant needs.
@@ -237,6 +239,8 @@ Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better co
 
 <!-- Add screenshot: Screenshot__74_.png — Final SFT: 1521/1521 steps, 3 epochs, 97M trainable params -->
 <!-- ![Final SFT Training Complete](assets/final_sft_training.png) -->
+
+![Attempt_3](screenshots/Attempt_3/ROUGE_Result.png)
 
 ### What the Numbers Mean
 

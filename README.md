@@ -39,9 +39,9 @@ Click any badge below to open the notebook directly in Google Colab:
 
 | Notebook | Description | Colab |
 |---|---|---|
-| 1st Attempt | Baseline: toy dataset + PubMedQA, 1 epoch | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_1st_Attempt.ipynb) |
-| 2nd Attempt | Refined DPO, 3 epochs, same dataset | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb) |
-| **Final** ✅ | USMLE data, NEFTune, best results | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_Final.ipynb) |
+| 1st Attempt | Baseline: toy dataset + PubMedQA, 1 epoch | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/notebooks/Medical_LLM_Full_Pipeline_1st_Attempt.ipynb) |
+| 2nd Attempt | Refined DPO, 3 epochs, same dataset | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/notebooks/Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb) |
+| **Final** ✅ | USMLE data, NEFTune, best results | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/notebooks/Medical_LLM_Full_Pipeline_Final.ipynb) |
 
 > ⚠️ **Note:** These notebooks require a GPU runtime. In Colab go to `Runtime → Change runtime type → T4 GPU`. You will also need to set your `WANDB_API_KEY` and `HF_TOKEN` as Colab secrets (`🔑` icon in the left sidebar).
 
@@ -71,7 +71,7 @@ The project went through three major iterations. Each attempt revealed weaknesse
 
 ---
 
-### Attempt 1 — Baseline [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_1st_Attempt.ipynb)
+### Attempt 1 — Baseline [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/notebooks/Medical_LLM_Full_Pipeline_1st_Attempt.ipynb)
 
 **Goal:** Establish a working end-to-end pipeline for medical domain fine-tuning.
 
@@ -118,7 +118,7 @@ The pipeline ran successfully and training loss converged, but outputs were shal
 
 ---
 
-### Attempt 2 — Refined Training [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb)
+### Attempt 2 — Refined Training [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/notebooks/Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb)
 
 **Goal:** Push the existing dataset further with more training and stronger DPO, to understand whether the ceiling was the data or the training setup.
 
@@ -166,7 +166,7 @@ Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better co
 
 ---
 
-### Attempt 3 — Final ✅ [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_Final.ipynb)
+### Attempt 3 — Final ✅ [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/notebooks/Medical_LLM_Full_Pipeline_Final.ipynb)
 
 **Goal:** Build a production-quality model using high-difficulty clinical reasoning data at scale.
 

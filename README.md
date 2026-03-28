@@ -33,6 +33,20 @@ The project evolved across **three iterative attempts**, each improving dataset 
 
 ---
 
+## 🚀 Run the Notebooks
+
+Click any badge below to open the notebook directly in Google Colab:
+
+| Notebook | Description | Colab |
+|---|---|---|
+| 1st Attempt | Baseline: toy dataset + PubMedQA, 1 epoch | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_1st_Attempt.ipynb) |
+| 2nd Attempt | Refined DPO, 3 epochs, same dataset | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb) |
+| **Final** ✅ | USMLE data, NEFTune, best results | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_Final.ipynb) |
+
+> ⚠️ **Note:** These notebooks require a GPU runtime. In Colab go to `Runtime → Change runtime type → T4 GPU`. You will also need to set your `WANDB_API_KEY` and `HF_TOKEN` as Colab secrets (`🔑` icon in the left sidebar).
+
+---
+
 ## 🏗️ Architecture & Technical Stack
 
 ```
@@ -43,7 +57,7 @@ Adapter:            LoRA (r=64, alpha=128, dropout=0.05)
 Target Layers:      q_proj, k_proj, v_proj, o_proj,
                     gate_proj, up_proj, down_proj
 Training:           SFT (3 epochs, 1521 steps) → DPO (1 epoch, 928 steps)
-Hardware:           Kaggle T4 GPU
+Hardware:           Kaggle T4 GPU (also runnable on Colab T4)
 Serving:            FastAPI (streaming SSE) + Gradio frontend
 ```
 
@@ -57,7 +71,7 @@ The project went through three major iterations. Each attempt revealed weaknesse
 
 ---
 
-### Attempt 1 — `Medical_LLM_Full_Pipeline_1st_Attempt.ipynb`
+### Attempt 1 — Baseline [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_1st_Attempt.ipynb)
 
 **Goal:** Establish a working end-to-end pipeline for medical domain fine-tuning.
 
@@ -80,7 +94,7 @@ The project went through three major iterations. Each attempt revealed weaknesse
 | Sequence Packing | Disabled |
 | NEFTune | Not used |
 
-**Measured Results (from Kaggle run logs):**
+**Measured Results:**
 
 | Metric | Value |
 |---|---|
@@ -93,36 +107,35 @@ The project went through three major iterations. Each attempt revealed weaknesse
 | DPO avg_loss (final) | 0.01378 |
 | DPO loss (final step) | 0.00066 |
 
+<!-- Add screenshot: Screenshot__65_.png — run summary table showing eval/loss 1.62653 -->
+<!-- ![Attempt 1 Run Summary](assets/attempt1_run_summary.png) -->
+
 **Why This Wasn't Enough:**
 
 The pipeline ran successfully and training loss converged, but outputs were shallow. The `lavita/medical-qa-shared-task-v1-toy` dataset is deliberately tiny — designed for benchmarking, not training. Answers were often just single option labels with no clinical reasoning. The model learned format but not medical substance. With only **58 training steps**, the model had far too little exposure to medical content to generalize. The DPO stage (Beta=0.1) also gave the model too much freedom to deviate from the SFT reference.
 
-**Decision:** Run more epochs and improve DPO configuration before deciding on a dataset change.
+**Decision:** Run more epochs and strengthen DPO before deciding on a dataset change.
 
 ---
 
-### Attempt 2 — `Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb`
+### Attempt 2 — Refined Training [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb)
 
 **Goal:** Push the existing dataset further with more training and stronger DPO, to understand whether the ceiling was the data or the training setup.
 
 **Datasets Used:** Same as Attempt 1 (toy + PubMedQA)
 
 **Key Changes from Attempt 1:**
-- Increased SFT epochs from 1 → **3**, giving the model more passes over the data
+- Increased SFT epochs from 1 → **3**
 - Added explicit 90/10 train/validation splitting to track overfitting
-- Richer DPO negative strategies:
-  - **Mismatched answer** — pulling a correct answer from a different question
-  - **Incomplete answer** — truncating and adding a vague disclaimer
-  - **Overcautious answer** — replacing with "consult a clinician"
-  - **Binary flip** — inverting Yes/No responses
+- Richer DPO negative strategies: mismatched answer, incomplete answer, overcautious answer, binary flip
 - DPO Beta increased 0.1 → **0.2** to keep policy closer to the SFT reference
 - DPO Learning Rate reduced 5e-5 → **5e-6** to prevent over-optimization
 
-**Measured Results (from Kaggle run logs):**
+**Measured Results:**
 
 | Metric | Value |
 |---|---|
-| SFT Final train/loss | 1.4070 |
+| SFT Final train loss | 1.4070 |
 | SFT eval/loss | 1.6766 |
 | SFT train/epoch | 3 |
 | SFT global steps | 174 |
@@ -139,15 +152,21 @@ The pipeline ran successfully and training loss converged, but outputs were shal
 | DPO Final average loss | 0.0979 |
 | DPO loss (final step) | 0.00053 |
 
+<!-- Add screenshot: Screenshot__68_.png — SFT complete, train loss 1.4070, run history bars -->
+<!-- ![Attempt 2 SFT Training](assets/attempt2_sft_training.png) -->
+
+<!-- Add screenshot: Screenshot__71_.png — ROUGE evaluation results 0.3641 / 0.1371 / 0.2813 -->
+<!-- ![Attempt 2 ROUGE Scores](assets/attempt2_rouge_scores.png) -->
+
 **Why This Still Wasn't Enough:**
 
-Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better convergence (500 steps vs 110). But ROUGE-1 of **0.3641** means the model was only matching about 1 in 3 words from reference answers. The core problem was now clear: **the dataset itself was the bottleneck**. The toy dataset contains short, shallow answers that don't capture clinical reasoning. No amount of additional epochs could fix that. PubMedQA alone, while research-heavy, doesn't provide the breadth of decision-making a medical assistant needs.
+Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better convergence (500 steps vs 110). But ROUGE-1 of **0.3641** means the model was only matching about 1 in 3 words from reference answers. The core problem was now clear: **the dataset itself was the bottleneck**. The toy dataset contains short, shallow answers that don't capture clinical reasoning. No amount of additional epochs could fix bad training data. PubMedQA alone, while research-heavy, doesn't provide the breadth of decision-making a medical assistant needs.
 
 **Decision:** Completely replace the toy dataset with USMLE board-level questions at scale, and enable sequence packing + NEFTune noise for better GPU efficiency and generalization.
 
 ---
 
-### Attempt 3 (Final) — `Medical_LLM_Full_Pipeline_Final.ipynb` ✅
+### Attempt 3 — Final ✅ [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KumarSarthak-Official/Medical_AI_Assistant-with-SFT_DPO/blob/main/Medical_LLM_Full_Pipeline_Final.ipynb)
 
 **Goal:** Build a production-quality model using high-difficulty clinical reasoning data at scale.
 
@@ -155,20 +174,20 @@ Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better co
 - `GBaker/MedQA-USMLE-4-options` — Real USMLE board exam questions requiring multi-step clinical reasoning. **8,000 examples** sampled.
 - `qiaojin/PubMedQA` (`pqa_labeled`) — Full **1,000** biomedical research Q&A pairs
 
-**Total SFT Dataset:** ~8,100 training examples (90/10 split) — up from ~500 in previous attempts
+**Total SFT Dataset:** ~8,100 training examples — up from ~500 in previous attempts
 
 **What Changed and Why:**
 
 | Change | Attempt 1 & 2 | Final | Reason |
 |---|---|---|---|
-| Primary Dataset | Toy medical Q&A | USMLE board questions (8,000) | Board-level questions demand real clinical reasoning, not just label selection |
-| Dataset Scale | ~500 examples | ~8,100 examples | More diverse, high-quality data is the single biggest lever for LLM performance |
-| SFT Epochs | 1 / 3 | 3 | Three full passes over the larger, richer dataset |
+| Primary Dataset | Toy medical Q&A | USMLE board questions (8,000) | Board-level questions demand real clinical reasoning, not label selection |
+| Dataset Scale | ~500 examples | ~8,100 examples | More diverse, high-quality data is the single biggest lever for performance |
 | SFT Steps | 58 / 174 | **1,521** | 8.7x more training steps than Attempt 2 |
-| Sequence Packing | Disabled | Enabled (`packing=True`) | Packs short sequences to maximize T4 GPU utilization |
+| Sequence Packing | Disabled | Enabled (`packing=True`) | Maximizes T4 GPU utilization by packing short sequences together |
 | NEFTune Noise | Not used | `neftune_noise_alpha=5.0` | Adds embedding noise during training — proven to improve instruction-following |
-| DPO Beta | 0.1 / 0.2 | 0.2 | Keeps the fine-tuned policy closer to SFT reference |
+| DPO Beta | 0.1 / 0.2 | 0.2 | Keeps fine-tuned policy closer to SFT reference, prevents reward hacking |
 | DPO Learning Rate | 5e-5 / 5e-6 | 5e-6 | Prevents over-optimization on preference pairs |
+| DPO Steps | 110 / 500 | **928** | More alignment steps over richer USMLE preference pairs |
 
 **Final Training Configuration:**
 
@@ -211,9 +230,15 @@ Running 3 epochs improved training loss (1.64 → 1.16) and DPO showed better co
 | DPO Steps | 110 | 500 | **928** |
 | DPO avg_loss (final) | 0.01378 | 0.10156 | **0.01378** |
 
+<!-- Add screenshot: Screenshot__73_.png — Final ROUGE 0.7674 / 0.7010 / 0.7548, Perplexity 2.9528 -->
+<!-- ![Final Evaluation Results](assets/final_evaluation_results.png) -->
+
+<!-- Add screenshot: Screenshot__74_.png — Final SFT: 1521/1521 steps, 3 epochs, 97M trainable params -->
+<!-- ![Final SFT Training Complete](assets/final_sft_training.png) -->
+
 ### What the Numbers Mean
 
-The improvement from Attempt 2 → Final is dramatic. ROUGE-1 jumped from **0.36 → 0.77** — meaning the final model correctly reproduces more than 3 out of 4 words present in a reference medical answer. ROUGE-2 at **0.70** shows strong bigram (two-word phrase) overlap, confirming the model captures real clinical terminology rather than just isolated keywords. Perplexity dropped from **5.37 → 2.95**, indicating the model is far more confident and calibrated on medical text. All of this is attributable primarily to the dataset upgrade: USMLE board questions provide the clinical reasoning chains that teach a model *how to think* about medicine, not just which label to select.
+The improvement from Attempt 2 → Final is dramatic. ROUGE-1 jumped from **0.36 → 0.77** — the final model correctly reproduces more than 3 out of 4 words present in a reference medical answer. ROUGE-2 at **0.70** shows strong bigram overlap, confirming the model captures real clinical terminology rather than isolated keywords. Perplexity dropped from **5.37 → 2.95**, indicating the model is far more confident and calibrated on medical text. All of this is attributable primarily to the dataset upgrade: USMLE board questions provide the clinical reasoning chains that teach a model *how to think* about medicine.
 
 ### Sample Prediction vs Reference (Final Model)
 
@@ -223,7 +248,7 @@ The improvement from Attempt 2 → Final is dramatic. ROUGE-1 jumped from **0.36
 **Reference:**
 > The incidence of post-tonsillectomy late haemorrhage in our study population was 1.78%. A statistically significant difference was found between night-time and day-time haemorrhages...
 
-The model correctly identifies the key clinical finding and frames it as a research-style conclusion — this is exactly the kind of structured, evidence-aware response the USMLE training data enabled.
+The model correctly identifies the key clinical finding and frames it as a research-style conclusion — exactly the kind of structured, evidence-aware response the USMLE training data enabled.
 
 ---
 
@@ -231,11 +256,20 @@ The model correctly identifies the key clinical finding and frames it as a resea
 
 All training runs were tracked with [Weights & Biases](https://wandb.ai/kumarsarthakofficial-birla-institute-of-technology-mesra/medical-llm-finetune/reports/Projects-medical-llm-finetune--VmlldzoxNjM0NjAwMA?accessToken=2qhqj2j2up2qd98epspklrd3qo9v9cyzks3eqf8zs6csryfqv9fubw535j2ce8dc).
 
+<!-- Add screenshot: Screenshot__82_.png — WandB train/loss curves across all runs -->
+<!-- ![WandB Training Loss](assets/wandb_train_loss.png) -->
+
+<!-- Add screenshot: Screenshot__83_.png — WandB eval/loss curves -->
+<!-- ![WandB Eval Loss](assets/wandb_eval_loss.png) -->
+
+<!-- Add screenshot: Screenshot__84_.png — WandB DPO metrics: dpo/loss, dpo/avg_loss -->
+<!-- ![WandB DPO Metrics](assets/wandb_dpo_metrics.png) -->
+
 **SFT Training Loss** — The final 3-epoch USMLE run shows a smooth, sustained descent over 1,521 steps with the cosine LR schedule, ultimately converging to a final train loss of **0.0000**.
 
-**Eval Loss** — The final model achieves eval/loss of **1.0828**, the lowest across all runs, and loads the best checkpoint automatically at end of training.
+**Eval Loss** — The final model achieves eval/loss of **1.0828**, the lowest across all runs. The best checkpoint is loaded automatically at end of training.
 
-**DPO Metrics** — The `dpo/avg_loss` curve converges cleanly from ~0.3 → ~0.014 over 928 steps. The final `dpo/loss` at the last step is near zero, confirming the model has fully aligned to the preference distribution without reward hacking (controlled by Beta=0.2).
+**DPO Metrics** — The `dpo/avg_loss` curve converges cleanly from ~0.3 → ~0.014 over 928 steps. The final `dpo/loss` at the last step is near zero, confirming stable alignment without reward hacking.
 
 > **View the full interactive training dashboard →** [WandB Report](https://wandb.ai/kumarsarthakofficial-birla-institute-of-technology-mesra/medical-llm-finetune/reports/Projects-medical-llm-finetune--VmlldzoxNjM0NjAwMA?accessToken=2qhqj2j2up2qd98epspklrd3qo9v9cyzks3eqf8zs6csryfqv9fubw535j2ce8dc)
 
@@ -262,7 +296,7 @@ The final model is served via a two-component production system:
 └─────────────────────────────────────────────────────────┘
 ```
 
-The backend uses `TextIteratorStreamer` from HuggingFace to stream tokens in real-time via Server-Sent Events (SSE), so the user sees responses appearing word-by-word without waiting for the full generation.
+The backend uses `TextIteratorStreamer` to stream tokens in real-time via Server-Sent Events (SSE), so the user sees responses appearing word-by-word without waiting for full generation.
 
 ---
 
@@ -305,9 +339,19 @@ python evaluate.py \
 ```
 Medical_AI_Assistant-with-SFT_DPO/
 │
-├── Medical_LLM_Full_Pipeline_1st_Attempt.ipynb   # Baseline: toy dataset, 1 epoch (ROUGE-1: —)
+├── Medical_LLM_Full_Pipeline_1st_Attempt.ipynb   # Baseline: toy dataset, 1 epoch
 ├── Medical_LLM_Full_Pipeline_2nd_Attempt.ipynb   # 3 epochs, better DPO (ROUGE-1: 0.36)
 ├── Medical_LLM_Full_Pipeline_Final.ipynb          # USMLE data, NEFTune (ROUGE-1: 0.77) ✅
+│
+├── assets/                       # Screenshots and images for README
+│   ├── attempt1_run_summary.png
+│   ├── attempt2_sft_training.png
+│   ├── attempt2_rouge_scores.png
+│   ├── final_evaluation_results.png
+│   ├── final_sft_training.png
+│   ├── wandb_train_loss.png
+│   ├── wandb_eval_loss.png
+│   └── wandb_dpo_metrics.png
 │
 ├── app.py              # FastAPI streaming backend
 ├── gradio_app.py       # Gradio chat frontend

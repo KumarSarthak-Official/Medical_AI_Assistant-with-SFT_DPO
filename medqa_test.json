@@ -1,0 +1,10 @@
+[
+  {
+    "instruction": "What are the common side effects of lisinopril?",
+    "output": "Common side effects of lisinopril include a dry cough, dizziness, headache, fatigue, nausea, and in some cases, elevated blood potassium levels."
+  },
+  {
+    "instruction": "Describe the mechanism of action of SSRIs.",
+    "output": "Selective Serotonin Reuptake Inhibitors (SSRIs) work by blocking the reabsorption (reuptake) of the neurotransmitter serotonin in the brain, making more serotonin available to improve message transmission between neurons."
+  }
+]

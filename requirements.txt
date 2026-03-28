@@ -1,0 +1,8 @@
+torch
+fastapi
+uvicorn
+pydantic
+transformers
+unsloth
+gradio
+httpx
